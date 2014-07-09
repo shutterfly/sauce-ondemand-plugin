@@ -42,6 +42,7 @@ import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.bind.JavaScriptMethod;
 
 import javax.servlet.ServletException;
+import java.io.File;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -130,9 +131,34 @@ public class PluginImpl extends Plugin implements Describable<PluginImpl> {
 
     @Extension
     public static final class DescriptorImpl extends Descriptor<PluginImpl> {
+
+        static final String BASE_MSG_INVALID_WORKING_DIR = "Sauce Connect needs a writable working directory on the jenkins master.";
+
         @Override
         public String getDisplayName() {
             return "Sauce OnDemand";
+        }
+
+        public FormValidation doCheckSauceConnectDirectory(@QueryParameter String sauceConnectDirectory)
+            throws IOException, ServletException {
+            logger.fine("checking validity of sauceConnectDirectory: '" + sauceConnectDirectory + "'");
+            File sauceConnectDir = new File(sauceConnectDirectory);
+
+            if("".equals(sauceConnectDirectory)){
+                return FormValidation.ok();
+            }
+
+            String message = BASE_MSG_INVALID_WORKING_DIR + "  '%s' %s";
+            if (!sauceConnectDir.isDirectory()) {
+                return FormValidation.error(message, sauceConnectDirectory, "is not a directory.");
+            }
+
+
+            if (!sauceConnectDir.canWrite()) {
+                return FormValidation.error(message, sauceConnectDirectory, "is not writable.");
+            }
+
+            return FormValidation.ok();
         }
 
         public FormValidation doValidate(@QueryParameter String username, @QueryParameter String apiKey, @QueryParameter boolean disableStatusColumn, @QueryParameter boolean reuseSauceAuth) {
