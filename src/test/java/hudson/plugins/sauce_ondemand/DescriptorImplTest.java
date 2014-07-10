@@ -1,12 +1,14 @@
 package hudson.plugins.sauce_ondemand;
 
 import hudson.util.FormValidation;
+import org.junit.Assume;
 import org.junit.Test;
 
 import java.io.File;
 import java.util.Random;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 @SuppressWarnings("ThrowableResultOfMethodCallIgnored")
 public class DescriptorImplTest {
@@ -60,28 +62,32 @@ public class DescriptorImplTest {
     public void doCheckSauceConnectDirectory_should_return_error_when_directory_is_not_writable()
         throws Exception {
 
-        if ("root".equals(System.getProperty("user.name"))) {
-            System.out.println("warning, skipping writable-directory validation test " +
-                "because root can always write to the directory");
-        } else {
-            PluginImpl.DescriptorImpl descriptor = new PluginImpl.DescriptorImpl();
-            File tempDir = getTempDirectory();
+        PluginImpl.DescriptorImpl descriptor = new PluginImpl.DescriptorImpl();
+        File tempDir = getTempDirectory();
 
-            String newDirLocation = tempDir.getCanonicalPath() + File.pathSeparator + "should-not-exist-" + random.nextInt();
-            File newDir = new File(newDirLocation);
-            assertTrue("could not create dir: " + newDirLocation, newDir.mkdir());
-            assertTrue("could not make dir read-only: " + newDirLocation, newDir.setWritable(false));
+        String newDirLocation = tempDir.getCanonicalPath() + File.pathSeparator + "should-not-exist-" + random.nextInt();
+        File newDir = new File(newDirLocation);
+        assertTrue("could not create dir: " + newDirLocation, newDir.mkdir());
+        assertTrue("could not make dir read-only: " + newDirLocation, newDir.setWritable(false));
 
-            assertTrue(newDir.isDirectory());
-            assertFalse(newDir.canWrite()); //canWrite will always return true as root
+        assertTrue(newDir.isDirectory());
 
-            FormValidation validationResult = descriptor.doCheckSauceConnectDirectory(newDirLocation);
+        Assume.assumeFalse("skipping writable-directory validation test " +
+                "because test directory could not be made read-only; " +
+                "a likely cause of this condition is that the test is executing as root" +
+                "or some other highly-privileged user that can always write to files/directories," +
+                "regardless of permissions",
+            newDir.canWrite()
+        );
 
-            assertEquals(FormValidation.Kind.ERROR, validationResult.kind);
-            String message = validationResult.getMessage();
-            assertTrue(message.startsWith(PluginImpl.DescriptorImpl.BASE_MSG_INVALID_WORKING_DIR));
-            assertTrue(message.contains(newDirLocation));
-            assertTrue(message, message.contains("is not writable"));
-        }
+        FormValidation validationResult = descriptor.doCheckSauceConnectDirectory(newDirLocation);
+
+        assertEquals(FormValidation.Kind.ERROR, validationResult.kind);
+        String message = validationResult.getMessage();
+        assertTrue(message.startsWith(PluginImpl.DescriptorImpl.BASE_MSG_INVALID_WORKING_DIR));
+        assertTrue(message.contains(newDirLocation));
+        assertTrue(message, message.contains("is not writable"));
+
     }
+
 }
