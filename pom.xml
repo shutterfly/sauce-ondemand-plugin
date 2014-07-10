@@ -1,15 +1,14 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <!--<version>1.476</version>-->
-        <version>1.570</version>
+        <version>1.476</version>
+        <!--<version>1.570</version>-->
     </parent>
 
     <artifactId>sauce-ondemand</artifactId>
-    <version>1.93.0-SNAPSHOT</version>
+    <version>1.94.0-SNAPSHOT</version>
     <packaging>hpi</packaging>
     <name>Jenkins Sauce OnDemand plugin</name>
     <url>http://wiki.jenkins-ci.org/display/JENKINS/Sauce+OnDemand+Plugin</url>
@@ -179,7 +178,7 @@
         <dependency>
             <groupId>com.saucelabs</groupId>
             <artifactId>ci-sauce</artifactId>
-            <version>1.70.0-SNAPSHOT</version>
+            <version>1.72</version>
             <scope>compile</scope>
             <exclusions>
                 <exclusion>
@@ -233,11 +232,12 @@
             <artifactId>copy-to-slave</artifactId>
             <version>1.4</version>
         </dependency>
-        <dependency>
-            <groupId>org.jenkins-ci.plugins</groupId>
-            <artifactId>matrix-project</artifactId>
-            <version>1.0-beta-1</version>
-        </dependency>
+
+        <!--<dependency>-->
+            <!--<groupId>org.jenkins-ci.plugins</groupId>-->
+            <!--<artifactId>matrix-project</artifactId>-->
+            <!--<version>1.0-beta-1</version>-->
+        <!--</dependency>-->
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-all</artifactId>
