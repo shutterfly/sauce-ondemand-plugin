@@ -9,9 +9,11 @@ public class EnvironmentTest {
     @Test
     public void list_environment_vars() {
         System.out.println("Listing Environment Variables");
+/*
         for (Map.Entry<String, String> entry : System.getenv().entrySet()) {
             System.out.println(String.format("%s:%s", entry.getKey(), entry.getValue()));
         }
+*/
     }
 
     @Test
