@@ -18,6 +18,8 @@ public class EnvironmentTest {
     public void list_system_properties() {
         System.out.println("Listing System Properties");
 
+        System.out.println("user.home: " + System.getProperty("user.home"));
+
         for (Map.Entry<Object, Object> entry : System.getProperties().entrySet()) {
             System.out.println(String.format("%s:%s", entry.getKey(), entry.getValue()));
         }
