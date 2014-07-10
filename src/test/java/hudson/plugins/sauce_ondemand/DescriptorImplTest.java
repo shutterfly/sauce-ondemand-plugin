@@ -6,10 +6,9 @@ import org.junit.Test;
 import java.io.File;
 import java.util.Random;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.*;
 
+@SuppressWarnings("ThrowableResultOfMethodCallIgnored")
 public class DescriptorImplTest {
 
     private final Random random = new Random(System.currentTimeMillis());
@@ -61,23 +60,28 @@ public class DescriptorImplTest {
     public void doCheckSauceConnectDirectory_should_return_error_when_directory_is_not_writable()
         throws Exception {
 
-        PluginImpl.DescriptorImpl descriptor = new PluginImpl.DescriptorImpl();
-        File tempDir = getTempDirectory();
+        if ("root".equals(System.getProperty("user.name"))) {
+            System.out.println("warning, skipping writable-directory validation test " +
+                "because root can always write to the directory");
+        } else {
+            PluginImpl.DescriptorImpl descriptor = new PluginImpl.DescriptorImpl();
+            File tempDir = getTempDirectory();
 
-        String newDirLocation = tempDir.getCanonicalPath() + File.pathSeparator + "should-not-exist-" + random.nextInt();
-        File newDir = new File(newDirLocation);
-        newDir.mkdir();
-        newDir.setWritable(false);
+            String newDirLocation = tempDir.getCanonicalPath() + File.pathSeparator + "should-not-exist-" + random.nextInt();
+            File newDir = new File(newDirLocation);
+            assertTrue("could not create dir: " + newDirLocation, newDir.mkdir());
+            assertTrue("could not make dir read-only: " + newDirLocation, newDir.setWritable(false));
 
-        assertTrue(newDir.isDirectory());
-        assertFalse(newDir.canWrite());
+            assertTrue(newDir.isDirectory());
+            assertFalse(newDir.canWrite()); //canWrite will always return true as root
 
-        FormValidation validationResult = descriptor.doCheckSauceConnectDirectory(newDirLocation);
+            FormValidation validationResult = descriptor.doCheckSauceConnectDirectory(newDirLocation);
 
-        assertEquals(FormValidation.Kind.ERROR, validationResult.kind);
-        String message = validationResult.getMessage();
-        assertTrue(message.startsWith(PluginImpl.DescriptorImpl.BASE_MSG_INVALID_WORKING_DIR));
-        assertTrue(message.contains(newDirLocation));
-        assertTrue(message, message.contains("is not writable"));
+            assertEquals(FormValidation.Kind.ERROR, validationResult.kind);
+            String message = validationResult.getMessage();
+            assertTrue(message.startsWith(PluginImpl.DescriptorImpl.BASE_MSG_INVALID_WORKING_DIR));
+            assertTrue(message.contains(newDirLocation));
+            assertTrue(message, message.contains("is not writable"));
+        }
     }
 }
