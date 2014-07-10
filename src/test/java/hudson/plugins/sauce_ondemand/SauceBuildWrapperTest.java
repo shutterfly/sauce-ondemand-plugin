@@ -21,8 +21,11 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Arrays;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Ross Rowe
@@ -66,6 +69,54 @@ public class SauceBuildWrapperTest {
 
     }
 
+
+    /**
+     * Verifies that environment variables are resolved for the Sauce Connect options.
+     *
+     * @throws Exception
+     */
+    /*@Test
+    public void resolveVariables() throws Exception {
+        SauceConnectFourManager sauceConnectFourManager = new SauceConnectFourManager() {
+            @Override
+            public Process openConnection(String username, String apiKey, int port, File sauceConnectJar, String options, String httpsProtocol, PrintStream printStream, Boolean verboseLogging) throws SauceConnectException {
+                assertTrue("Variable not resolved", options.equals("-i 1"));
+                return null;
+            }
+        };
+        HudsonSauceManagerFactory.getInstance().getContainer().addComponent(sauceConnectFourManager, SauceConnectFourManager.class.getName());
+        Credentials sauceCredentials = new Credentials("username", "access key");
+        SeleniumInformation seleniumInformation = new SeleniumInformation("webDriver", null, null, null, null);
+        SauceOnDemandBuildWrapper sauceBuildWrapper =
+                new SauceOnDemandBuildWrapper(
+                        sauceCredentials,
+                        seleniumInformation,
+                        null,
+                        null,
+                        null,
+                        "-i ${BUILD_NUMBER}",
+                        null,
+                        true,
+                        true,
+                        false,
+                        true,
+                        false);
+
+        runFreestyleBuild(sauceBuildWrapper);
+
+
+        //assert that the Sauce REST API was invoked for the Sauce job id
+        assertNotNull(restUpdates.get(currentSessionId));
+        //TODO verify that test results of build include Sauce results
+
+    }*/
+
+
+    /**
+     * Simulates the handling of a Sauce Connect time out.
+     *
+     * @throws Exception
+     */
     @Test(expected=IOException.class)
     @Ignore
     public void sauceConnectTimeOut() throws Exception {
@@ -90,7 +141,8 @@ public class SauceBuildWrapperTest {
                         true,
                         true,
                         false,
-                        true);
+                        true,
+                        false);
 
         runFreestyleBuild(sauceBuildWrapper);
 
@@ -115,7 +167,8 @@ public class SauceBuildWrapperTest {
                         true,
                         true,
                         false,
-                        true);
+                        true,
+                        false);
 
         runFreestyleBuild(sauceBuildWrapper);
 
@@ -129,7 +182,7 @@ public class SauceBuildWrapperTest {
     /**
      * @throws Exception thrown if an unexpected error occurs
      */
-    @Test
+    /*@Test
     public void runSauceConnectVersion3() throws Exception {
 
         SeleniumInformation seleniumInformation = new SeleniumInformation("webDriver", null, null, null, null);
@@ -145,17 +198,58 @@ public class SauceBuildWrapperTest {
                         true,
                         true,
                         true,
-                        true);
+                        true,
+                        false);
 
         runFreestyleBuild(sauceBuildWrapper);
 
-        //assert that environment variables populated
+        //assert that the Sauce REST API was invoked for the Sauce job id
+        assertNotNull(restUpdates.get(currentSessionId));
+        //TODO verify that test results of build include Sauce results
+
+    }*/
+
+    /**
+     * @throws Exception thrown if an unexpected error occurs
+     */
+/*
+    @Test
+    public void multipleBrowsers() throws Exception {
+
+        SeleniumInformation seleniumInformation = new SeleniumInformation("webDriver", null, null, Arrays.asList("", ""), null);
+        SauceOnDemandBuildWrapper sauceBuildWrapper =
+                new SauceOnDemandBuildWrapper(
+                        sauceCredentials,
+                        seleniumInformation,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        true,
+                        true,
+                        true,
+                        true,
+                        false);
+
+        SauceBuilder sauceBuilder = new SauceBuilder() {
+            @Override
+            public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
+                //verify that SAUCE_ environment variables are populated
+                Map<String, String> envVars = build.getEnvironment(listener);
+                assertNotNull("Environment variable not found", envVars.get("SAUCE_ONDEMAND_BROWSERS"));
+                return super.perform(build, launcher, listener);
+            }
+        };
+
+        runFreestyleBuild(sauceBuildWrapper, sauceBuilder);
 
         //assert that mock SC stopped
         //        verify(sauceConnectFourManager.closeTunnelsForPlan(anyString(), anyString(), any(PrintStream.class)));
 
 
     }
+*/
 
     private void runFreestyleBuild(SauceOnDemandBuildWrapper sauceBuildWrapper) throws IOException, InterruptedException {
         FreeStyleProject freeStyleProject = jenkinsRule.createFreeStyleProject();

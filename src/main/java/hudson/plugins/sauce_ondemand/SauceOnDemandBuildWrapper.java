@@ -88,6 +88,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     private boolean useOldSauceConnect;
 
     private boolean enableSauceConnect;
+    private boolean useGeneratedTunnelIdentifier;
 
     private static final long serialVersionUID = 1L;
 
@@ -126,7 +127,8 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                                      boolean enableSauceConnect,
                                      boolean launchSauceConnectOnSlave,
                                      boolean useOldSauceConnect,
-                                     boolean verboseLogging) {
+                                     boolean verboseLogging,
+                                     boolean useGeneratedTunnelIdentifier) {
         this.credentials = credentials;
         this.seleniumInformation = seleniumInformation;
         this.enableSauceConnect = enableSauceConnect;
@@ -143,6 +145,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         this.launchSauceConnectOnSlave = launchSauceConnectOnSlave;
         this.useOldSauceConnect = useOldSauceConnect;
         this.verboseLogging = verboseLogging;
+        this.useGeneratedTunnelIdentifier = useGeneratedTunnelIdentifier;
     }
 
 
@@ -496,6 +499,14 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
 
     public void setUseOldSauceConnect(boolean useOldSauceConnect) {
         this.useOldSauceConnect = useOldSauceConnect;
+    }
+
+    public boolean isUseGeneratedTunnelIdentifier() {
+        return useGeneratedTunnelIdentifier;
+    }
+
+    public void setUseGeneratedTunnelIdentifier(boolean useGeneratedTunnelIdentifier) {
+        this.useGeneratedTunnelIdentifier = useGeneratedTunnelIdentifier;
     }
 
     public boolean isVerboseLogging() {
