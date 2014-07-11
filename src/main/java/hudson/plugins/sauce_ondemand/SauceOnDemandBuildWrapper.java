@@ -83,6 +83,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     private static final String SAUCE_API_KEY = "SAUCE_API_KEY";
     public static final String SELENIUM_DEVICE = "SELENIUM_DEVICE";
     public static final String SELENIUM_DEVICE_TYPE = "SELENIUM_DEVICE_TYPE";
+    private static final String TUNNEL_IDENTIFIER = "TUNNEL_IDENTIFIER";
     private final String startingURL;
     private boolean useOldSauceConnect;
 
@@ -148,7 +149,18 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     @Override
     public Environment setUp(final AbstractBuild build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
         logger.info("Setting up Sauce Build Wrapper");
+
+        final String tunnelIdentifier = SauceEnvironmentUtil.generateTunnelIdentifier(build);
+
         if (isEnableSauceConnect()) {
+            String workingDirectory = PluginImpl.get().getSauceConnectDirectory();
+            String resolvedOptions = getResolvedOptions(build, listener);
+
+            if(isUseGeneratedTunnelIdentifier()){
+                build.getBuildVariables().put(TUNNEL_IDENTIFIER, tunnelIdentifier);
+                resolvedOptions = "--tunnel-identifier " + tunnelIdentifier + " " + resolvedOptions;
+            }
+
             if (launchSauceConnectOnSlave) {
                 listener.getLogger().println("Starting Sauce OnDemand SSH tunnel on slave node");
                 if (!(Computer.currentComputer() instanceof Hudson.MasterComputer)) {
@@ -179,6 +191,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                 SauceEnvironmentUtil.outputAppiumVariables(env, appiumBrowsers, getUserName(), getApiKey());
                 //if any variables have been defined in build variables (ie. by a multi-config project), use them
                 Map buildVariables = build.getBuildVariables();
+
                 if (buildVariables.containsKey(SELENIUM_BROWSER)) {
                     env.put(SELENIUM_BROWSER, (String) buildVariables.get(SELENIUM_BROWSER));
                 }
@@ -192,6 +205,10 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                 env.put(SAUCE_USERNAME, getUserName());
                 env.put(SAUCE_API_KEY, getApiKey());
                 env.put(SELENIUM_HOST, getHostName());
+
+                if (isEnableSauceConnect()){
+                    env.put(TUNNEL_IDENTIFIER, tunnelIdentifier);
+                }
 
                 DecimalFormat myFormatter = new DecimalFormat("####");
                 env.put(SELENIUM_PORT, myFormatter.format(getPort()));
@@ -251,6 +268,33 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                 return true;
             }
         };
+    }
+
+    /**
+     * Returns the Sauce Connect options, with any strings representing environment variables (eg. ${SOME_ENV_VAR}) resolved.
+     *
+     * @param build    The same {@link Build} object given to the set up method.
+     * @param listener The same {@link BuildListener} object given to the set up method.
+     * @return the Sauce Connect options to be used for the build
+     * @throws IOException
+     * @throws InterruptedException
+     */
+    private String getResolvedOptions(AbstractBuild build, BuildListener listener) throws IOException, InterruptedException {
+        String resolvedOptions = options;
+        if (options != null) {
+            //check to see if options contains any environment variables to be resolved
+            Pattern pattern = Pattern.compile("(\\$\\{.+\\})");
+            Matcher matcher = pattern.matcher(options);
+            while (matcher.find()) {
+                String match = matcher.group();
+                String key = match.replaceAll("[\\$\\{\\}]", "");
+                if (build.getEnvironment(listener).containsKey(key)) {
+                    resolvedOptions = resolvedOptions.replace(match, build.getEnvironment().get(key));
+                }
+            }
+
+        }
+        return resolvedOptions;
     }
 
     /**

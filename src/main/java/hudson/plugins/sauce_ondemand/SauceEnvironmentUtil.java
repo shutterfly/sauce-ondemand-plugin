@@ -177,4 +177,8 @@ public class SauceEnvironmentUtil {
         }
         return builder.toString();
     }
+
+    public static String generateTunnelIdentifier(final AbstractBuild build) {
+        return build.getProject().getName() + "-" + System.currentTimeMillis();
+    }
 }
