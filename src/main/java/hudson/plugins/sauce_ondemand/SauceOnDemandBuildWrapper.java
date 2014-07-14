@@ -547,23 +547,19 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         return sauceOnDemandLogParser;
     }
 
-    final class TunnelHolder implements ITunnelHolder, Serializable {
-        private final String username;
-        private final String options;
+    static class TunnelHolder implements ITunnelHolder, Serializable {
+        final String username;
+        final String options;
+        final AbstractSauceTunnelManager tunnelManager;
 
-        public TunnelHolder(String username, String options) {
+        public TunnelHolder(AbstractSauceTunnelManager tunnelManager, String username, String options) {
+            this.tunnelManager = tunnelManager;
             this.username = username;
             this.options = options;
         }
 
         public void close(TaskListener listener) {
-            try {
-                getSauceTunnelManager().closeTunnelsForPlan(this.username, this.options, listener.getLogger());
-            } catch (ComponentLookupException e) {
-                //shouldn't happen
-                logger.log(Level.SEVERE, "Unable to close tunnel", e);
-            }
-
+            tunnelManager.closeTunnelsForPlan(this.username, this.options, listener.getLogger());
         }
     }
 
@@ -614,11 +610,11 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         }
 
         public ITunnelHolder call() throws AbstractSauceTunnelManager.SauceConnectException {
-            TunnelHolder tunnelHolder = new TunnelHolder(username, options);
             try {
                 listener.getLogger().println("Launching Sauce Connect on " + InetAddress.getLocalHost().getHostName());
-                Process process = getSauceTunnelManager().openConnection(username, key, port, sauceConnectJar, options, httpsProtocol, listener.getLogger(), verboseLogging);
-                return tunnelHolder;
+                AbstractSauceTunnelManager sauceTunnelManager = getSauceTunnelManager();
+                Process process = sauceTunnelManager.openConnection(username, key, port, sauceConnectJar, options, httpsProtocol, listener.getLogger(), verboseLogging);
+                return new TunnelHolder(sauceTunnelManager, username, options);
             } catch (ComponentLookupException e) {
                 throw new AbstractSauceTunnelManager.SauceConnectException(e);
             } catch (UnknownHostException e) {
