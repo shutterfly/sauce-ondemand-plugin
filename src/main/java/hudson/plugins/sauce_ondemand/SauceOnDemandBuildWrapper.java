@@ -209,7 +209,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
                 env.put(SAUCE_API_KEY, getApiKey());
                 env.put(SELENIUM_HOST, getHostName());
 
-                if (isEnableSauceConnect()){
+                if (isEnableSauceConnect() && isUseGeneratedTunnelIdentifier()){
                     env.put(TUNNEL_IDENTIFIER, tunnelIdentifier);
                 }
 
