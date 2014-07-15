@@ -482,7 +482,7 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     }
 
     private interface ITunnelHolder {
-        void close(TaskListener listener);
+        void close(TaskListener listener) throws ComponentLookupException;
     }
 
     public boolean isLaunchSauceConnectOnSlave() {
@@ -548,18 +548,20 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
     }
 
     static class TunnelHolder implements ITunnelHolder, Serializable {
+        private static final long serialVersionUID = 1L;
+
         final String username;
         final String options;
-        final AbstractSauceTunnelManager tunnelManager;
+        final TunnelManagerFactory tunnelManagerFactory;
 
-        public TunnelHolder(AbstractSauceTunnelManager tunnelManager, String username, String options) {
-            this.tunnelManager = tunnelManager;
+        public TunnelHolder(TunnelManagerFactory tunnelManagerFactory, String username, String options) {
+            this.tunnelManagerFactory = tunnelManagerFactory;
             this.username = username;
             this.options = options;
         }
 
-        public void close(TaskListener listener) {
-            tunnelManager.closeTunnelsForPlan(this.username, this.options, listener.getLogger());
+        public void close(TaskListener listener) throws ComponentLookupException {
+            tunnelManagerFactory.getSauceTunnelManager().closeTunnelsForPlan(this.username, this.options, listener.getLogger());
         }
     }
 
@@ -578,8 +580,12 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         }
 
         public ITunnelHolder call() throws IOException {
-            tunnelHolder.close(listener);
-            return tunnelHolder;
+            try {
+                tunnelHolder.close(listener);
+                return tunnelHolder;
+            } catch (ComponentLookupException e) {
+                throw new AbstractSauceTunnelManager.SauceConnectException(e);
+            }
         }
     }
 
@@ -612,9 +618,10 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         public ITunnelHolder call() throws AbstractSauceTunnelManager.SauceConnectException {
             try {
                 listener.getLogger().println("Launching Sauce Connect on " + InetAddress.getLocalHost().getHostName());
-                AbstractSauceTunnelManager sauceTunnelManager = getSauceTunnelManager();
+                TunnelManagerFactory tunnelManagerFactory = new TunnelManagerFactory(useOldSauceConnect);
+                AbstractSauceTunnelManager sauceTunnelManager = tunnelManagerFactory.getSauceTunnelManager();
                 Process process = sauceTunnelManager.openConnection(username, key, port, sauceConnectJar, options, httpsProtocol, listener.getLogger(), verboseLogging);
-                return new TunnelHolder(sauceTunnelManager, username, options);
+                return new TunnelHolder(tunnelManagerFactory, username, options);
             } catch (ComponentLookupException e) {
                 throw new AbstractSauceTunnelManager.SauceConnectException(e);
             } catch (UnknownHostException e) {
@@ -623,10 +630,21 @@ public class SauceOnDemandBuildWrapper extends BuildWrapper implements Serializa
         }
     }
 
-    public AbstractSauceTunnelManager getSauceTunnelManager() throws ComponentLookupException {
-        return useOldSauceConnect ? HudsonSauceManagerFactory.getInstance().createSauceConnectTwoManager() :
+    public static class TunnelManagerFactory implements Serializable {
+        private static final long serialVersionUID = 1L;
+        private final boolean useOldSauceConnect;
+
+        TunnelManagerFactory(boolean useOldSauceConnect){
+            this.useOldSauceConnect = useOldSauceConnect;
+        }
+
+        public AbstractSauceTunnelManager getSauceTunnelManager() throws ComponentLookupException {
+            return useOldSauceConnect ? HudsonSauceManagerFactory.getInstance().createSauceConnectTwoManager() :
                 HudsonSauceManagerFactory.getInstance().createSauceConnectFourManager();
+        }
+
     }
+
 
     /**
      * Plugin descriptor, which adds the plugin details to the Jenkins job configuration page.
