@@ -29,6 +29,10 @@
         </snapshotRepository>
     </distributionManagement>
 
+    <properties>
+        <selenium.version>2.42.2</selenium.version>
+    </properties>
+
     <build>
         <resources>
             <resource>
@@ -155,7 +159,13 @@
         <dependency>
             <groupId>org.seleniumhq.selenium</groupId>
             <artifactId>selenium-remote-driver</artifactId>
-            <version>2.33.0</version>
+            <version>${selenium.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.seleniumhq.selenium</groupId>
+            <artifactId>selenium-java</artifactId>
+            <version>${selenium.version}</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.saucelabs</groupId>
@@ -221,6 +231,12 @@
             <artifactId>selenium-client-factory</artifactId>
             <version>2.4</version>
             <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.seleniumhq.selenium</groupId>
+                    <artifactId>selenium-java</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.codehaus.jackson</groupId>
